@@ -52,17 +52,28 @@ export default {
     const dayKey = utcDayKey(now)
     const countKey = `chatLimit:${clientId}:${dayKey}`
 
-    // Initialize if needed.
-    const current = (await kv.get<number>(countKey)) ?? 0
-    if (current >= limit) {
-      return new Response(JSON.stringify({ error: 'CHAT_LIMIT', limit }), {
-        status: 429,
-        headers: { 'content-type': 'application/json' },
-      })
-    }
+    // KV is optional so the endpoint can still work when KV secrets are missing/misconfigured.
+    const kvUrl = process.env.KV_REST_API_URL
+    const kvToken = process.env.KV_REST_API_TOKEN
+    const shouldUseKv = typeof kvUrl === 'string' && kvUrl.length > 0 && typeof kvToken === 'string' && kvToken.length > 0
 
-    // Increment and set TTL so it auto-resets tomorrow.
-    await kv.set(countKey, current + 1, { ex: secondsUntilUtcMidnight(now) })
+    if (shouldUseKv) {
+      try {
+        // Initialize if needed.
+        const current = (await kv.get<number>(countKey)) ?? 0
+        if (current >= limit) {
+          return new Response(JSON.stringify({ error: 'CHAT_LIMIT', limit }), {
+            status: 429,
+            headers: { 'content-type': 'application/json' },
+          })
+        }
+
+        // Increment and set TTL so it auto-resets tomorrow.
+        await kv.set(countKey, current + 1, { ex: secondsUntilUtcMidnight(now) })
+      } catch {
+        // Rate limiting should never take down chat responses.
+      }
+    }
 
     // ---- Grounded retrieval from local catalog ----
     const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content?.trim() ?? ''
@@ -110,26 +121,33 @@ export default {
       temperature: 0.4,
     }
 
-    const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify(payloadForModel),
-    })
+    let aiJson: any
+    try {
+      const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          authorization: `Bearer ${apiKey}`,
+        },
+        body: JSON.stringify(payloadForModel),
+      })
 
-    if (!aiRes.ok) {
-      const errText = await aiRes.text().catch(() => '')
-      return new Response(JSON.stringify({ error: 'AI request failed', details: errText }), { status: 502 })
+      if (!aiRes.ok) {
+        const errText = await aiRes.text().catch(() => '')
+        return new Response(JSON.stringify({ error: 'AI request failed', details: errText }), { status: 502 })
+      }
+
+      aiJson = (await aiRes.json()) as any
+    } catch {
+      return new Response(JSON.stringify({ error: 'AI request failed' }), { status: 502 })
     }
 
-    const aiJson = (await aiRes.json()) as any
     const content = aiJson?.choices?.[0]?.message?.content
     if (typeof content !== 'string') {
       return new Response(JSON.stringify({ error: 'AI response invalid' }), { status: 502 })
     }
 
+    // The model is instructed to respond with strict JSON, but we still parse defensively.
     const parsed = safeJsonParse(content) as any
     const replyText = typeof parsed?.replyText === 'string' ? parsed.replyText : 'Thanks — I can help you find a suitable item.'
     const recommendedProductIds = Array.isArray(parsed?.recommendedProductIds)
@@ -139,7 +157,7 @@ export default {
       ? parsed.navigationPaths
           .map((x: any) => ({
             path: typeof x?.path === 'string' ? x.path : shopPath,
-            label: typeof x?.label === 'string' ? x.label : 'Browse shop',
+            label: typeof x?.label === 'string' ? x?.label : 'Browse shop',
           }))
           .slice(0, 3)
       : []

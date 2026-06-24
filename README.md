@@ -20,3 +20,4 @@ Open [http://localhost:5173](http://localhost:5173).
 | `src/data/catalog.ts` | Joined catalog and search/filter helpers |
 | `public/images/` | Product photos |
 # ParasWebiste
+# ParasWebiste

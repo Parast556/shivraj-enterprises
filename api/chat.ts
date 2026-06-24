@@ -1,5 +1,5 @@
 import { kv } from '@vercel/kv'
-import { allProducts, searchProducts } from '../src/data/catalog'
+import { allProducts, searchProducts } from './catalog'
 
 type ChatRole = 'user' | 'assistant'
 

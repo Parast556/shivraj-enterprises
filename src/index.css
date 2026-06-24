@@ -1,0 +1,298 @@
+@import "tailwindcss";
+
+@theme {
+  --color-gold: #c9a962;
+  --color-gold-light: #e0c98a;
+  --color-gold-dark: #a88b3d;
+  --color-forest: #1b3a2d;
+  --color-forest-light: #2d5a45;
+  --color-forest-dark: #0f2419;
+  --color-beige: #f5f0e8;
+  --color-beige-dark: #e8dfd0;
+  --color-cream: #faf8f4;
+
+  --font-display: "Cormorant Garamond", Georgia, serif;
+  --font-body: "Inter", system-ui, sans-serif;
+
+  --shadow-soft: 0 4px 24px -6px rgba(27, 58, 45, 0.07);
+  --shadow-card: 0 8px 32px -10px rgba(27, 58, 45, 0.1);
+  --shadow-card-hover: 0 24px 56px -18px rgba(27, 58, 45, 0.16);
+  --shadow-float: 0 12px 40px -14px rgba(27, 58, 45, 0.14);
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  html.scroll-locked,
+  html.scroll-locked body {
+    overflow: hidden;
+  }
+
+  body {
+    @apply bg-cream text-forest font-body antialiased;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, rgba(201, 169, 98, 0.07), transparent),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(27, 58, 45, 0.03), transparent);
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-gold/30 text-forest;
+  }
+
+  img {
+    @apply select-none;
+  }
+
+  :focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--color-gold) 60%, transparent);
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  .font-display {
+    font-family: var(--font-display);
+  }
+
+  .font-body {
+    font-family: var(--font-body);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+
+  /* Section labels — editorial style seen on artisan / decor catalogs */
+  .section-eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.28em] text-gold-dark;
+  }
+
+  .section-eyebrow-centered {
+    @apply flex items-center justify-center gap-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-gold-dark;
+  }
+
+  .section-eyebrow-centered::before,
+  .section-eyebrow-centered::after {
+    content: "";
+    height: 1px;
+    width: 2.5rem;
+    background: linear-gradient(90deg, transparent, var(--color-gold) 50%, transparent);
+    opacity: 0.7;
+  }
+
+  .section-eyebrow-left {
+    @apply flex items-center gap-3 text-[11px] font-semibold uppercase tracking-[0.28em] text-gold-dark;
+  }
+
+  .section-eyebrow-left::after {
+    content: "";
+    height: 1px;
+    width: 2rem;
+    background: linear-gradient(90deg, var(--color-gold), transparent);
+    opacity: 0.55;
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-card-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .shadow-float {
+    box-shadow: var(--shadow-float);
+  }
+
+  /* Primary CTA — gold pill */
+  .btn-gold {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-gold px-8 py-3.5 text-sm font-semibold text-forest transition-all duration-300;
+  }
+
+  .btn-gold:hover {
+    @apply bg-gold-light;
+    box-shadow: 0 8px 28px -6px rgba(201, 169, 98, 0.45);
+    transform: translateY(-1px);
+  }
+
+  .btn-gold:active {
+    transform: translateY(0);
+  }
+
+  /* Forest CTA */
+  .btn-forest {
+    @apply inline-flex items-center justify-center gap-2 rounded-full bg-forest px-8 py-3.5 text-sm font-semibold text-white transition-all duration-300;
+  }
+
+  .btn-forest:hover {
+    @apply bg-forest-light;
+    box-shadow: 0 8px 28px -6px rgba(27, 58, 45, 0.35);
+    transform: translateY(-1px);
+  }
+
+  .btn-forest:active {
+    transform: translateY(0);
+  }
+
+  /* Outline / ghost CTA */
+  .btn-outline {
+    @apply inline-flex items-center justify-center gap-2 rounded-full border border-forest/15 bg-white/80 px-6 py-3 text-sm font-medium text-forest backdrop-blur-sm transition-all duration-300;
+  }
+
+  .btn-outline:hover {
+    @apply border-gold/35 bg-beige/80 text-forest;
+    transform: translateY(-1px);
+  }
+
+  /* Text link with arrow — product cards, related items */
+  .link-subtle {
+    @apply inline-flex items-center gap-1 text-xs font-medium text-forest/50 transition-colors duration-200;
+  }
+
+  .link-subtle:hover {
+    @apply text-gold-dark;
+  }
+
+  .link-subtle svg {
+    @apply transition-transform duration-200;
+  }
+
+  .link-subtle:hover svg {
+    transform: translateX(3px);
+  }
+
+  /* Card surface — consistent product / cart panels */
+  .surface-card {
+    @apply rounded-2xl border border-forest/[0.06] bg-white;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .surface-card-interactive {
+    @apply rounded-2xl border border-forest/[0.06] bg-white transition-all duration-500;
+    box-shadow: var(--shadow-soft);
+  }
+
+  .surface-card-interactive:hover {
+    @apply border-gold/20;
+    box-shadow: var(--shadow-card-hover);
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.65s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.animate-fade-in {
+  animation: fade-in 0.45s ease-out both;
+}
+
+.animation-delay-100 {
+  animation-delay: 100ms;
+}
+
+.animation-delay-200 {
+  animation-delay: 200ms;
+}
+
+.animation-delay-300 {
+  animation-delay: 300ms;
+}
+
+.animation-delay-400 {
+  animation-delay: 400ms;
+}
+
+@keyframes scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scale-in {
+  animation: scale-in 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes slide-in-right {
+  from {
+    transform: translateX(100%);
+    opacity: 0.9;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slide-in-right 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-fade-in-up,
+  .animate-fade-in,
+  .animate-scale-in,
+  .animate-slide-in-right {
+    animation: none;
+  }
+
+  .btn-gold:hover,
+  .btn-forest:hover,
+  .btn-outline:hover,
+  .surface-card-interactive:hover {
+    transform: none;
+  }
+}

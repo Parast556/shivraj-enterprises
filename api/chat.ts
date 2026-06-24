@@ -98,14 +98,14 @@ export default {
       'navigationPaths must include at least one path when guidance is needed. ' +
       'Keep replyText concise and friendly.'
 
-    const openAiModel = process.env.OPENAI_MODEL ?? 'gpt-4o-mini'
-    const apiKey = process.env.OPENAI_API_KEY
+    const model = 'llama-3.3-70b-versatile'
+    const apiKey = process.env.GROQ_API_KEY
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'Missing OPENAI_API_KEY' }), { status: 500 })
+      return new Response(JSON.stringify({ error: 'Missing GROQ_API_KEY' }), { status: 500 })
     }
 
     const payloadForModel = {
-      model: openAiModel,
+      model,
       messages: [
         { role: 'system', content: systemPrompt },
         {
@@ -123,7 +123,7 @@ export default {
 
     let aiJson: any
     try {
-      const aiRes = await fetch('https://api.openai.com/v1/chat/completions', {
+      const aiRes = await fetch('https://api.groq.com/openai/v1/chat/completions', {
         method: 'POST',
         headers: {
           'content-type': 'application/json',

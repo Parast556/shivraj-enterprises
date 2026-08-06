@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { categories } from '../data/categories.config'
+import { useProducts } from '../context/ProductsContext'
 
 interface CategoryNavProps {
   orientation?: 'horizontal' | 'pills'
@@ -8,6 +8,7 @@ interface CategoryNavProps {
 
 export default function CategoryNav({ orientation = 'horizontal', onNavigate }: CategoryNavProps) {
   const location = useLocation()
+  const { categories } = useProducts()
 
   const isActive = (slug: string) => location.pathname === `/category/${slug}`
 

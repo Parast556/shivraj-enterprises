@@ -1,6 +1,8 @@
 // Self-contained catalog for Vercel Function runtime.
 // This module intentionally does NOT import from `website/src/*`.
 
+import { createClient } from '@supabase/supabase-js'
+
 interface Category {
   slug: string
   name: string
@@ -371,17 +373,15 @@ function attachCategoriesToProducts(items: Array<Omit<Product, 'categories'>>): 
 
 export const allProducts: Product[] = attachCategoriesToProducts(productsBase)
 
-function getCategoryBySlug(slug: string): Category | undefined {
-  return categories.find((c) => c.slug === slug)
-}
-
-export function searchProducts(products: Product[], query: string): Product[] {
+function searchProductsWithCatalog(productsToSearch: Product[], categoriesToUse: Category[], query: string): Product[] {
   const q = query.trim().toLowerCase()
-  if (!q) return products
+  if (!q) return productsToSearch
 
-  return products.filter((product) => {
+  const categoryBySlug = new Map(categoriesToUse.map((c) => [c.slug, c] as const))
+
+  return productsToSearch.filter((product) => {
     const categoryNames = product.categories
-      .map((slug) => getCategoryBySlug(slug)?.name.toLowerCase() ?? '')
+      .map((slug) => categoryBySlug.get(slug)?.name.toLowerCase() ?? '')
       .join(' ')
 
     return (
@@ -390,5 +390,91 @@ export function searchProducts(products: Product[], query: string): Product[] {
       categoryNames.includes(q)
     )
   })
+}
+
+type SupabaseCatalog = { products: Product[]; categories: Category[] }
+
+let supabaseCatalogCache: SupabaseCatalog | null = null
+
+async function getSupabaseCatalogIfAvailable(): Promise<SupabaseCatalog | null> {
+  const supabaseUrl = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
+  const supabaseAnonKey = process.env.SUPABASE_ANON_KEY ?? process.env.VITE_SUPABASE_ANON_KEY
+  if (!supabaseUrl || !supabaseAnonKey) return null
+
+  if (supabaseCatalogCache) return supabaseCatalogCache
+
+  const supabase = createClient(supabaseUrl, supabaseAnonKey)
+
+  const { data: categoryRows, error: categoriesError } = await supabase
+    .from('categories')
+    .select('slug,name,tagline,description')
+    .order('sort_order', { ascending: true })
+
+  if (categoriesError) throw categoriesError
+
+  const { data: productRows, error: productsError } = await supabase
+    .from('products')
+    .select('id,name,description,image_url')
+    .order('sort_order', { ascending: true })
+
+  if (productsError) throw productsError
+
+  const { data: productCategoryRows, error: pcError } = await supabase
+    .from('product_categories')
+    .select('product_id,category_slug')
+
+  if (pcError) throw pcError
+
+  const categoriesToUse: Category[] = (categoryRows ?? []).map((c: any) => ({
+    slug: c.slug,
+    name: c.name,
+    tagline: c.tagline,
+    description: c.description,
+    productIds: [],
+  }))
+
+  const categoryBySlug = new Map(categoriesToUse.map((c) => [c.slug, c] as const))
+  const productToCategorySlugs = new Map<string, string[]>()
+
+  for (const row of (productCategoryRows ?? []) as any[]) {
+    const productId = row.product_id as string
+    const categorySlug = row.category_slug as string
+
+    const cat = categoryBySlug.get(categorySlug)
+    if (cat) cat.productIds.push(productId)
+
+    productToCategorySlugs.set(productId, [...(productToCategorySlugs.get(productId) ?? []), categorySlug])
+  }
+
+  // Deduplicate productIds/category slugs while preserving insertion order.
+  for (const cat of categoriesToUse) {
+    cat.productIds = Array.from(new Set(cat.productIds))
+  }
+  for (const [productId, slugs] of productToCategorySlugs.entries()) {
+    productToCategorySlugs.set(productId, Array.from(new Set(slugs)))
+  }
+
+  const productsToUse: Product[] = (productRows ?? []).map((p: any) => ({
+    id: p.id,
+    name: p.name,
+    description: p.description,
+    image: p.image_url,
+    categories: productToCategorySlugs.get(p.id) ?? [],
+  }))
+
+  supabaseCatalogCache = { products: productsToUse, categories: categoriesToUse }
+  return supabaseCatalogCache
+}
+
+export async function searchProducts(products: Product[], query: string): Promise<Product[]> {
+  try {
+    // Supabase-only mode: the input `products` is ignored (kept for signature compatibility).
+    void products
+    const catalog = await getSupabaseCatalogIfAvailable()
+    if (!catalog) return []
+    return searchProductsWithCatalog(catalog.products, catalog.categories, query)
+  } catch {
+    return []
+  }
 }
 

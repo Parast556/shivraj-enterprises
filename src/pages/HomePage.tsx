@@ -4,21 +4,22 @@ import CategoryCard from '../components/CategoryCard'
 import Hero from '../components/Hero'
 import ProductGrid from '../components/ProductGrid'
 import ProductSearch from '../components/ProductSearch'
-import { categories } from '../data/categories.config'
-import { searchProducts } from '../data/catalog'
+import { searchProducts } from '../data/catalogRuntime'
 import { useProducts } from '../context/ProductsContext'
 
 export default function HomePage() {
-  const { products } = useProducts()
+  const { products, categories, hasLoaded } = useProducts()
   const [searchQuery, setSearchQuery] = useState('')
 
   const filteredProducts = useMemo(
-    () => searchProducts(products, searchQuery),
-    [products, searchQuery],
+    () => searchProducts(products, categories, searchQuery),
+    [products, categories, searchQuery],
   )
 
   const isSearching = searchQuery.trim().length > 0
   const featured = isSearching ? filteredProducts : products.slice(0, 8)
+
+  if (!hasLoaded) return null
 
   return (
     <>

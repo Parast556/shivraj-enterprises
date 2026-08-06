@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { getCategoryCoverImage, getCategoryProductCount } from '../data/catalog'
+import { getCategoryCoverImage, getCategoryProductCount } from '../data/catalogRuntime'
 import { useProducts } from '../context/ProductsContext'
 import type { Category } from '../types'
 import ProductImage from './ProductImage'
@@ -10,9 +10,9 @@ interface CategoryCardProps {
 }
 
 export default function CategoryCard({ category, index = 0 }: CategoryCardProps) {
-  const { products } = useProducts()
-  const count = getCategoryProductCount(products, category.slug)
-  const cover = getCategoryCoverImage(products, category.slug)
+  const { products, categories } = useProducts()
+  const count = getCategoryProductCount(products, categories, category.slug)
+  const cover = getCategoryCoverImage(products, categories, category.slug)
 
   return (
     <Link

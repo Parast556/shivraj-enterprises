@@ -4,18 +4,18 @@ import CategoryNav from '../components/CategoryNav'
 import PageHeader from '../components/PageHeader'
 import ProductGrid from '../components/ProductGrid'
 import ProductSearch from '../components/ProductSearch'
-import { getCategoryBySlug, getProductsByCategory } from '../data/catalog'
+import { getCategoryBySlug, getProductsByCategory } from '../data/catalogRuntime'
 import { useProducts } from '../context/ProductsContext'
 
 export default function CategoryPage() {
   const { slug = '' } = useParams()
-  const { products } = useProducts()
-  const category = getCategoryBySlug(slug)
+  const { products, categories, hasLoaded } = useProducts()
+  const category = getCategoryBySlug(categories, slug)
   const [searchQuery, setSearchQuery] = useState('')
 
   const categoryProducts = useMemo(
-    () => getProductsByCategory(products, slug),
-    [products, slug],
+    () => getProductsByCategory(products, categories, slug),
+    [products, categories, slug],
   )
 
   const filteredProducts = useMemo(() => {
@@ -27,6 +27,7 @@ export default function CategoryPage() {
   }, [categoryProducts, searchQuery])
 
   if (!category) {
+    if (!hasLoaded) return null
     return (
       <div className="mx-auto max-w-7xl px-4 py-24 text-center sm:px-6">
         <h1 className="font-display text-3xl font-semibold text-forest">Category not found</h1>

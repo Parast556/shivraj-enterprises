@@ -1,7 +1,8 @@
 import type { MouseEvent } from 'react'
 import { Link } from 'react-router-dom'
-import { getCategoryBySlug } from '../data/catalog'
+import { getCategoryBySlug } from '../data/catalogRuntime'
 import { useImageLightbox } from '../context/ImageLightboxContext'
+import { useProducts } from '../context/ProductsContext'
 import type { Product } from '../types'
 import AddToCartButton from './AddToCartButton'
 import ProductImage from './ProductImage'
@@ -12,8 +13,9 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, index = 0 }: ProductCardProps) {
+  const { categories } = useProducts()
   const primaryCategory = product.categories[0]
-    ? getCategoryBySlug(product.categories[0])
+    ? getCategoryBySlug(categories, product.categories[0])
     : undefined
   const { openPreview } = useImageLightbox()
 

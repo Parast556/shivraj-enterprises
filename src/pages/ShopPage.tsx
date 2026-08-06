@@ -3,17 +3,18 @@ import CategoryNav from '../components/CategoryNav'
 import PageHeader from '../components/PageHeader'
 import ProductGrid from '../components/ProductGrid'
 import ProductSearch from '../components/ProductSearch'
-import { searchProducts } from '../data/catalog'
+import { searchProducts } from '../data/catalogRuntime'
 import { useProducts } from '../context/ProductsContext'
 
 export default function ShopPage() {
-  const { products } = useProducts()
+  const { products, categories, hasLoaded } = useProducts()
   const [searchQuery, setSearchQuery] = useState('')
-
   const filteredProducts = useMemo(
-    () => searchProducts(products, searchQuery),
-    [products, searchQuery],
+    () => searchProducts(products, categories, searchQuery),
+    [products, categories, searchQuery],
   )
+
+  if (!hasLoaded) return null
 
   return (
     <>

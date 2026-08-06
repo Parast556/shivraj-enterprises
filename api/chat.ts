@@ -1,5 +1,5 @@
 import { kv } from '@vercel/kv'
-import { allProducts, searchProducts } from './catalog.js'
+import { searchProducts } from './catalog.js'
 
 type ChatRole = 'user' | 'assistant'
 
@@ -79,7 +79,7 @@ export default {
     const lastUser = [...messages].reverse().find((m) => m.role === 'user')?.content?.trim() ?? ''
     const query = lastUser.length ? lastUser : 'decorative statues home decor'
 
-    const matches = searchProducts(allProducts, query).slice(0, 6)
+    const matches = (await searchProducts([], query)).slice(0, 6)
     const productContext = matches
       .map(
         (p) =>

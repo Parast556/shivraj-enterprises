@@ -7,7 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
-import { getProductById } from '../data/catalog'
+import { getProductById } from '../data/catalogRuntime'
 import { useProducts } from './ProductsContext'
 import type { CartItem, Product } from '../types'
 
@@ -94,10 +94,12 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const clearCart = useCallback(() => setItems([]), [])
 
+  const itemCount = useMemo(() => items.reduce((sum, line) => sum + line.quantity, 0), [items])
+
   const value = useMemo<CartContextValue>(
     () => ({
       items: lines,
-      itemCount: lines.reduce((sum, line) => sum + line.quantity, 0),
+      itemCount,
       addItem,
       removeItem,
       updateQuantity,
@@ -105,7 +107,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       isInCart: (productId) => items.some((i) => i.productId === productId),
       getQuantity: (productId) => items.find((i) => i.productId === productId)?.quantity ?? 0,
     }),
-    [lines, items, addItem, removeItem, updateQuantity, clearCart],
+    [lines, items, itemCount, addItem, removeItem, updateQuantity, clearCart],
   )
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>

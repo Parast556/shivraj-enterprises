@@ -1,7 +1,9 @@
 import { Link } from 'react-router-dom'
-import { categories } from '../data/categories.config'
+import { useProducts } from '../context/ProductsContext'
 
 export default function Footer() {
+  const { categories } = useProducts()
+
   return (
     <footer id="footer" className="border-t border-forest/10 bg-forest-dark text-white">
       <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">

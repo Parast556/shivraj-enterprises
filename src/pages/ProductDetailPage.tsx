@@ -8,19 +8,20 @@ import {
   getCategoryBySlug,
   getProductById,
   getRelatedProducts,
-} from '../data/catalog'
+} from '../data/catalogRuntime'
 import { useProducts } from '../context/ProductsContext'
 import { getProductEnquiryUrl } from '../utils/whatsapp'
 import { useState } from 'react'
 
 export default function ProductDetailPage() {
   const { id = '' } = useParams()
-  const { products } = useProducts()
+  const { products, categories, hasLoaded } = useProducts()
   const product = getProductById(products, id)
   const { openPreview } = useImageLightbox()
   const [quantity, setQuantity] = useState(1)
 
   if (!product) {
+    if (!hasLoaded) return null
     return (
       <div className="mx-auto max-w-7xl px-4 py-24 text-center sm:px-6">
         <h1 className="font-display text-3xl font-semibold text-forest">Product not found</h1>
@@ -33,7 +34,7 @@ export default function ProductDetailPage() {
   }
 
   const productCategories = product.categories
-    .map((slug) => getCategoryBySlug(slug))
+    .map((slug) => getCategoryBySlug(categories, slug))
     .filter((c): c is NonNullable<typeof c> => c !== undefined)
   const related = getRelatedProducts(products, product)
 

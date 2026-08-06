@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useBodyScrollLock } from '../hooks/useBodyScrollLock'
-import { categories } from '../data/categories.config'
+import { useProducts } from '../context/ProductsContext'
 import { scrollToTopIfSameRoute } from '../utils/scrollRestoration'
 
 interface MobileMenuProps {
@@ -12,6 +12,7 @@ interface MobileMenuProps {
 
 export default function MobileMenu({ open, onClose, returnFocusRef }: MobileMenuProps) {
   const location = useLocation()
+  const { categories } = useProducts()
   const skipFocusRestoreRef = useRef(false)
   const skipScrollRestoreRef = useRef(false)
 
